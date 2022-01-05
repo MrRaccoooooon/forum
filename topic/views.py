@@ -2,6 +2,7 @@ from django.views.generic import *
 from django.urls import reverse
 from .models import *
 from datetime import datetime
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 # 討論主題列表
 class TopicList(ListView):
@@ -25,6 +26,13 @@ class TopicNew(CreateView):
 # 檢視討論主題
 class TopicView(DetailView):
     model = Topic
+
+    def get_context_data(self, **kwargs):
+        # 取得回覆資料傳給頁面範本處理
+        ctx = super().get_context_data(**kwargs)
+        ctx['reply_list'] = Reply.objects.filter(topic=self.object)
+        return ctx
+
     
 # 回覆討論主題
 class TopicReply(CreateView):
@@ -42,3 +50,20 @@ class TopicReply(CreateView):
 
     def get_success_url(self):
         return reverse('topic_view', args=[self.kwargs['tid']])
+        # 刪除討論主題
+class TopicDelete(PermissionRequiredMixin, DeleteView):
+    permission_required = 'topic.delete_topic'
+    model = Topic
+    template_name = 'confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse('topic_list')
+        # 刪除討論回覆
+class ReplyDelete(PermissionRequiredMixin, DeleteView):
+    permission_required = 'topic.delete_reply'
+    model = Reply
+    template_name = 'confirm_delete.html'
+
+    def get_success_url(self):
+        reply = self.get_object()   # 取得欲刪除的那筆紀錄
+        return reverse('topic_view', args=[reply.topic.id])
