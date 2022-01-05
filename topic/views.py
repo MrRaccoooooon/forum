@@ -58,6 +58,7 @@ class TopicDelete(PermissionRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse('topic_list')
+        
         # 刪除討論回覆
 class ReplyDelete(PermissionRequiredMixin, DeleteView):
     permission_required = 'topic.delete_reply'
